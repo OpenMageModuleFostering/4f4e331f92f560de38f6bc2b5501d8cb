@@ -50,6 +50,28 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
     	$send24_consumer_key = $this->getConfigData('send24_consumer_key');
         $send24_consumer_secret = $this->getConfigData('send24_consumer_secret');
 
+        $version = (float)Mage::getVersion();
+		$new_file = $_SERVER['DOCUMENT_ROOT'].'/app/design/adminhtml/default/default/template/send24/sales/order/view/info.phtml';
+        if(!file_exists($new_file)) {
+			if($version < 1.5){
+				try {
+					$file = $_SERVER['DOCUMENT_ROOT'].'/app/design/adminhtml/default/default/template/send24/sales/order/view/info1_4.phtml';
+                    copy($file, $new_file);
+				 }catch(Exception $error){
+					 Mage::getSingleton('core/session')->addError($error->getMessage());
+					 return false;
+				 }
+			}else{
+				try {
+					$file = $_SERVER['DOCUMENT_ROOT'].'/app/design/adminhtml/default/default/template/send24/sales/order/view/info1_9.phtml';
+                    copy($file, $new_file);
+				 }catch(Exception $error){
+					 Mage::getSingleton('core/session')->addError($error->getMessage());
+					 return false;
+				 }
+			}
+		}
+
 		// Save return.
       	$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, "https://www.send24.com/wc-api/v3/get_user_id");
@@ -231,7 +253,7 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
 			break;
 			case 'send24_shipping_send24':
 				if($is_available_denmark == true){
-	        		$insurance_price = $this->getConfigData('select_insurance');
+	        		$insurance_price = 0;
 		            $discount = "false";
 		            $type = $price_need = '';
 
@@ -246,7 +268,7 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
 		            }else{
 		            	$where_shop_id = '';
 		            }
-		 
+	 
 		            // Create order.
 		            $ch = curl_init();
 		            curl_setopt($ch, CURLOPT_URL, "https://www.send24.com/wc-api/v3/create_order");
@@ -276,7 +298,7 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
 		                                            "bill_mail": "'.$billing_data['email'].'"
 		                                            }
 		                                            ');
-
+					
 					curl_setopt($ch, CURLOPT_USERPWD, $send24_consumer_key . ":" . $send24_consumer_secret);
 		            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
 		               	"Content-Type: application/json",
@@ -339,15 +361,17 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
 		}
         	
         $response_order = json_decode($response, JSON_FORCE_OBJECT);
+        $version = (float)Mage::getVersion();
+		if($version >= 1.5){
+	        $history = Mage::getModel('sales/order_status_history')
+	                            ->setStatus($observer->getOrder()->getStatus())
+	                            ->setComment('<strong>Track parsel </strong><br><a href="'.$response_order['track'].'" target="_blank">'.$response_order['track'].'</a>')
+	                            ->setEntityName(Mage_Sales_Model_Order::HISTORY_ENTITY_NAME)
+	                            ->setIsCustomerNotified(false)
+	                            ->setCreatedAt(date('Y-m-d H:i:s', time() - 60*60*24));
 
-        $history = Mage::getModel('sales/order_status_history')
-                            ->setStatus($observer->getOrder()->getStatus())
-                            ->setComment('<strong>Track parsel </strong><br><a href="'.$response_order['track'].'" target="_blank">'.$response_order['track'].'</a>')
-                            ->setEntityName(Mage_Sales_Model_Order::HISTORY_ENTITY_NAME)
-                            ->setIsCustomerNotified(false)
-                            ->setCreatedAt(date('Y-m-d H:i:s', time() - 60*60*24));
-
-        $observer->getOrder()->addStatusHistory($history);
+	        $observer->getOrder()->addStatusHistory($history);
+    	}
         // Create custom value for order.
         // it temporarily
         require_once('app/Mage.php');
@@ -408,24 +432,32 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
 			//Appending the Custom Variables to Template.
 			$processedTemplate = $emailTemplate->getProcessedTemplate($emailTemplateVariables);
 			$customerEmail = $shipping_data['email'];
-			//Sending E-Mail to Customers.
-			$mail = Mage::getModel('core/email')
-			 ->setToName($senderName)
-			 ->setToEmail($customerEmail)
-			 ->setBody($processedTemplate)
-			 ->setSubject('Subject: Send24 Track Notice')
-			 ->setFromEmail($senderEmail)
-			 ->setFromName($senderName)
-			 ->setType('html');
-			 try{
-				 //Confimation E-Mail Send
-				 $mail->send();
-			 }
-			 catch(Exception $error)
-			 {
-				 Mage::getSingleton('core/session')->addError($error->getMessage());
-				 return false;
-			 }
+			
+			$version = (float)Mage::getVersion();
+			if($version < 1.5){
+				$headers  = 'MIME-Version: 1.0' . "\r\n";
+				$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+				$subject = 'Subject: Send24 Track Notice';
+				$message = 'Track: <a href="'.$emailTemplateVariables['track'].'">'.$emailTemplateVariables['track'].'</a>';
+				mail($senderEmail, $subject, $message, $headers);
+			}else{
+				//Sending E-Mail to Customers.
+				$mail = Mage::getModel('core/email')
+				 ->setToName($senderName)
+				 ->setToEmail($customerEmail)
+				 ->setBody($processedTemplate)
+				 ->setSubject('Subject: Send24 Track Notice')
+				 ->setFromEmail($senderEmail)
+				 ->setFromName($senderName)
+				 ->setType('html');
+				 try{
+					 //Confimation E-Mail Send
+					 $mail->send();
+				 }catch(Exception $error){
+					 Mage::getSingleton('core/session')->addError($error->getMessage());
+					 return false;
+				 }
+			}
         }
 
         $observer->getOrder()->save();
@@ -460,7 +492,7 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
         // Check errors.
         if(empty($send24_countries->errors)){
             $n = count($send24_countries);
-            if($shipping_country_name == $this->select_denmark){
+            if($shipping_country_name == $this->select_denmark  || $shipping_country_name == 'Danmark'){
             	for ($i = 0; $i < $n; $i++)
 	            {
 	            	// Express.
@@ -507,8 +539,6 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
                 $full_billing_address = "$billing_address_1, $billing_postcode $billing_city, $billing_country";
                 // $full_shipping_address = "Lermontova St, 26, Zaporizhzhia, Zaporiz'ka oblast, Ukraine";
                 // $full_billing_address = "Lermontova St, 26, Zaporizhzhia, Zaporiz'ka oblast, Ukraine";
-
-
 
                 // Get billing coordinates.
                 $billing_url = "http://maps.googleapis.com/maps/api/geocode/json?sensor=false&address=".urlencode($full_billing_address);
@@ -630,19 +660,20 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
 	        $send24_countries = json_decode(curl_exec($ch));
 	        // print_r($send24_countries);
 
+
 	        curl_close($ch);
 	        // Check errors.
 	        if(empty($send24_countries->errors)){
 	            $n = count($send24_countries);
-	           	if($shipping_country_name == $this->select_denmark){
+	           	if($shipping_country_name == $this->select_denmark || $shipping_country_name == 'Danmark'){
 		            for ($i = 0; $i < $n; $i++)
 		            {
 		                // Denmark.
 			            if ($send24_countries[$i]->product_id == $this->product_id_danmark )
 						{
 							// Insurance.
-							$insurance_price = $this->getConfigData('select_insurance');
-							$this->price_denmark = $send24_countries[$i]->price+$insurance_price;
+							// $insurance_price = $this->getConfigData('select_insurance');
+							$this->price_denmark = $send24_countries[$i]->price;
 		                    $is_available = true;
 		                    break;
 						}else{
@@ -697,19 +728,21 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
         if(empty($send24_countries->errors)){
             $n = count($send24_countries);
 			// Check on no Denmark.
-            for ($i = 0; $i < $n; $i++)
-            {
-                // International.
-	            if ($send24_countries[$i]->title == $shipping_country_name)
-				{
-					$this->price_international = $send24_countries[$i]->price;
-                    $is_available_international = true;
-                    break;
-				}else{
-                    $is_available_international = false;
+        	$is_available_international = false;
+            if($shipping_country_name != $this->select_denmark && $shipping_country_name != 'Danmark'){
+	            for ($i = 0; $i < $n; $i++)
+	            {
+	                // International.
+		            if ($send24_countries[$i]->title == $shipping_country_name)
+					{
+						$this->price_international = $send24_countries[$i]->price;
+	                    $is_available_international = true;
+	                    break;
+					}else{
+	                    $is_available_international = false;
+					}
 				}
-			}
-			
+			}	
         }
 
         if($is_available_international == true){

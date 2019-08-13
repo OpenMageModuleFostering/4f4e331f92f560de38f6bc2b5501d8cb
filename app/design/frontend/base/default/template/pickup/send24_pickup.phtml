@@ -5,8 +5,6 @@
  *
  *
  */
-$googleApiKey = Mage::getStoreConfig('carriers/send24_shipping/googlemap_key');
-
 ?>
 <script type="text/javascript">
   shops_details = [];
@@ -26,6 +24,8 @@ if($data['country']  == 'DK'){
 // Keys Api.
 $send24_consumer_key = Mage::getStoreConfig('carriers/send24_shipping/send24_consumer_key');
 $send24_consumer_secret = Mage::getStoreConfig('carriers/send24_shipping/send24_consumer_secret');
+// Show shops as.
+$show_shops = Mage::getStoreConfig('carriers/send24_shipping/show_shops');
 
 $val = json_encode($data);
 // Get pickups list.
@@ -58,11 +58,17 @@ if(!empty($response)){
     curl_close($ch);
     $array_shops_id = array();
     $map_value = '[';
-    foreach ($output as $key => $value) {
-      $map_value .= '{lat: "'.$value['latitude'].'", lng: "'.$value['longitude'].'", title: "'.$value['post_title'].'", id: "'.$value['ID'].'", distance: "'.$value['distance'].'"},';
-      array_push($array_shops_id, $value['ID']);
+    $end = end($output);
 
+    foreach ($output as $key => $value) {
+      if($end['ID'] != $value['ID']){
+        $map_value .= '{lat: "'.$value['latitude'].'", lng: "'.$value['longitude'].'", title: "'.$value['post_title'].'", id: "'.$value['ID'].'", distance: "'.$value['distance'].'"},';
+        array_push($array_shops_id, $value['ID']);
+      }else{
+          $map_value .= '{lat: "'.$value['latitude'].'", lng: "'.$value['longitude'].'", title: "'.$value['post_title'].'", id: "'.$value['ID'].'", distance: "'.$value['distance'].'"}';
+          array_push($array_shops_id, $value['ID']);
       }
+    }
     $map_value .= ']';
 }
 
@@ -92,6 +98,19 @@ if(!empty($response)){
 
 <?php
 $html = array();
+if($show_shops == 'map'){
+
+$version = (float)Mage::getVersion();
+if($version < 1.5){
+?>
+  <style type="text/css" media="screen">
+   #send24-popup-map{
+     height: 590px;
+   } 
+  </style>
+<?php
+}
+
 // Map.
 $html = '<br><div id="send24_map_info">';
 $html .= 'Selected shop: <b id="shop_selected">'.$output['0']['post_title'].'</b> <p>(<a id="send24_map" href="#open_map">choose</a>)</p>';
@@ -121,6 +140,7 @@ echo $html;
     
     var map;
     window.initMap = function() {
+
       var coordinates = <?php echo $map_value; ?>;
       var start_coordinates = Math.round(coordinates.length/2);
       var marker = Array();
@@ -128,6 +148,7 @@ echo $html;
         center: {lat: Number(coordinates[start_coordinates].lat), lng: Number(coordinates[start_coordinates].lng)},
           zoom: 12
       });
+      window.map = map;
 
       var default_id_distance = 0;
       for (var i = 0; i < coordinates.length; i++){                          
@@ -239,7 +260,33 @@ echo $html;
         document.cookie = 'selected_shop_id='+default_shop_id;
     }
 
-    <?php if($googleApiKey):?>
-    window.loadJsFile("https://maps.googleapis.com/maps/api/js?key=<?php echo $googleApiKey; ?>&signed_in=true&libraries=places&callback=initMap");
-    <?php endif; ?>
+    window.loadJsFile("https://maps.googleapis.com/maps/api/js?callback=initMap");
 </script>
+
+<?php
+// DropDown.
+}else{
+  // Map.
+  $html = '<br><div id="send24_map_info">';
+  $html .= 'Selected shop: <select class="selected_shop_dropdown" style="width: 150px;">';
+  // $shops = json_decode($output);
+  foreach ($output as $key => $value) {
+      $html .= '<option value="'.$value['ID'].'">'.$value['post_title'].'</option>';
+  }
+  $html .= '</select>';
+  $html .= '</div>';
+  echo $html;
+}
+?>
+<script type="text/javascript">
+  jQuery( "#s_method_send24_shipping_send24" ).live( "click", function() {
+    jQuery('#send24_map_info').show("slow");
+  });
+
+  document.cookie = 'selected_shop_id='+default_shop_id;
+  jQuery( ".selected_shop_dropdown" ).live( "click", function() {
+    var selected_shop_id = jQuery(this).val();
+    document.cookie = 'selected_shop_id='+selected_shop_id;
+  });
+
+  </script>

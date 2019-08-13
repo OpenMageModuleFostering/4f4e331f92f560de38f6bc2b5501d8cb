@@ -138,7 +138,7 @@
                             <show_in_store>1</show_in_store>
                         </enable_denmark>
 
-                        <select_insurance translate="label">
+<!--                         <select_insurance translate="label">
                             <label>Insurance for Denmark</label>
                             <comment>Please choose your insurance for Denmark.</comment>
                             <frontend_type>select</frontend_type>                                                                     
@@ -147,7 +147,17 @@
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
-                        </select_insurance>   
+                        </select_insurance>    -->
+                        <show_shops translate="label">
+                            <label>Show shops as</label>
+                            <comment>Please choose show shops as map or dropdown.</comment>
+                            <frontend_type>select</frontend_type>                                                                     
+                            <source_model>send24_shipping/map</source_model>     
+                            <sort_order>1120</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </show_shops>
 
                         <enable_international translate="label">
                             <label>International</label>
@@ -164,21 +174,11 @@
                        <sort_order translate="label">
                             <label>Sort Order</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>1000</sort_order>
+                            <sort_order>1400</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                        </sort_order>
-
-                        <googlemap_key translate="label">
-                            <label>Google map key</label>
-                            <comment>Google <![CDATA[<a href="https://console.developers.google.com/apis/credentials" target="_blank">key</a>]]> for map.</comment>
-                            <frontend_type>text</frontend_type>
-                            <sort_order>1012</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>0</show_in_store>
-                        </googlemap_key>               
+                        </sort_order>       
                     </fields>
                 </send24_shipping>
             </groups>
