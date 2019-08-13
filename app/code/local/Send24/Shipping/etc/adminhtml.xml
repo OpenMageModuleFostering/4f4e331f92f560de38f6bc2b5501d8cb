@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config>
+<menu>
+  <system>
+     <children>
+       <stockstatus>
+         <title>Send24 Shipping</title>
+         <action>adminhtml/system_config/edit/section/carriers</action>
+         <sort_order>100000</sort_order>
+       </stockstatus>
+     </children>
+  </system>
+</menu>
+</config>

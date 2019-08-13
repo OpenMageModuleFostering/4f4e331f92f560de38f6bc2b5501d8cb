@@ -30,7 +30,7 @@ $show_shops = Mage::getStoreConfig('carriers/send24_shipping/show_shops');
 $val = json_encode($data);
 // Get pickups list.
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, "https://www.send24.com/wc-api/v3/pickups_list");
+curl_setopt($ch, CURLOPT_URL, "https://send24.com/wc-api/v3/pickups_list");
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 curl_setopt($ch, CURLOPT_HEADER, FALSE);
@@ -75,7 +75,7 @@ if(!empty($response)){
   // Get shop all details.
   $value_shops_id = implode(",", $array_shops_id);
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, "https://www.send24.com/wc-api/v3/get_shop_full_list");
+  curl_setopt($ch, CURLOPT_URL, "https://send24.com/wc-api/v3/get_shop_full_list");
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
   curl_setopt($ch, CURLOPT_HEADER, FALSE);
   curl_setopt($ch, CURLOPT_POST, TRUE);
@@ -121,11 +121,12 @@ $html .= '<div id="map"></div>';
 $html .= '<div id="send24_info_map"></div>';
 $html .= '<div id="send24_selected_shop"></div>';
 $html .= '</div>';
+// jQuery( "#s_method_send24_shipping_send24, #s_method_send24_shipping_send24_gls, #s_method_send24_shipping_send24_ups, #s_method_send24_shipping_send24_postdenamrk, #s_method_send24_shipping_send24_dhl, #s_method_send24_shipping_send24_tnt, #s_method_send24_shipping_send24_bring" )
 echo $html;
 
 ?>
 <script type="text/javascript">
-  jQuery( "#s_method_send24_shipping_send24" ).live( "click", function() {
+    jQuery( "#s_method_send24_shipping_send24" ).live( "click", function() {
     jQuery('#send24_map_info').show("slow");
   });
   window.stroreshipper = {};
@@ -282,6 +283,7 @@ echo $html;
   jQuery( "#s_method_send24_shipping_send24" ).live( "click", function() {
     jQuery('#send24_map_info').show("slow");
   });
+
 
   document.cookie = 'selected_shop_id='+default_shop_id;
   jQuery( ".selected_shop_dropdown" ).live( "click", function() {

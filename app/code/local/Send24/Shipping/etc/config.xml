@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Send24_Shipping>
-            <module>1.0.3.2</module>
+            <module>1.0.4</module>
         </Send24_Shipping>
     </modules>
 
@@ -99,7 +99,7 @@
                 <!--
                     The title as referenced in the carrier class
                 -->
-                <title>Send24</title>
+                <title>Fragt</title>
                 <startexpress_time_select>08,00,00</startexpress_time_select>
                 <endexpress_time_select>18,00,00</endexpress_time_select>
                 <select_insurance>0</select_insurance>
@@ -110,3 +110,4 @@
         </carriers>
     </default>
 </config>
+
