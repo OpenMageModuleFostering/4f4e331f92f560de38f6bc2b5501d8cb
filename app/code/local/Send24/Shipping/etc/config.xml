@@ -2,7 +2,7 @@
 <config>
     <modules>
         <Send24_Shipping>
-            <module>1.0.4</module>
+            <module>1.0.5</module>
         </Send24_Shipping>
     </modules>
 

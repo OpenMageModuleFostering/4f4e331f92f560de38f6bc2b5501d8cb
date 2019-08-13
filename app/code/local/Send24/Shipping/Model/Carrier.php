@@ -18,10 +18,16 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
 
     public function collectRates(Mage_Shipping_Model_Rate_Request $request) {
         $result = Mage::getModel('shipping/rate_result');
-        // Check default currency.
-        if(Mage::app()->getStore()->getDefaultCurrencyCode() == 'DKK'){
+		$postcode = Mage::getSingleton('checkout/type_onepage')->getQuote()->getShippingAddress()->getPostcode();
+        $shipping_country_code = Mage::getModel('directory/country')->loadByCode(Mage::getSingleton('checkout/type_onepage')->getQuote()->getShippingAddress()->getCountry());
+    	$shipping_country_name = $shipping_country_code->getName();
+      	$country_id = $shipping_country_code->getData('country_id');
+      	// Check default currency.
+        if(Mage::app()->getStore()->getDefaultCurrencyCode() == 'DKK' && $country_id == 'DK'){
 	        // Express.
-	        $result->append($this->_getExpressShippingRate());
+	        if(self::checkonzip($postcode) == 'true'){
+	        	$result->append($this->_getExpressShippingRate());
+	        }
 	        // Countries.
 	        $enable_denmark = $this->getConfigData('enable_denmark');
 		    if($enable_denmark == 1){
@@ -41,7 +47,6 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
 		            "Content-Type: application/json"
 		            ));
 		        $send24_countries = json_decode(curl_exec($ch));
-		        $shipping_country_code = Mage::getModel('directory/country')->loadByCode(Mage::getSingleton('checkout/type_onepage')->getQuote()->getShippingAddress()->getCountry());
 	 			$is_available = false;
 		        if(!empty($send24_countries['0'])){
 		        	foreach ($send24_countries['0'] as $key => $value) {
@@ -61,12 +66,13 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
 		        	 $price_denmark = false;
 		        }
 	       	}  
-
 	       	// Destributions.
 	       	$active_smartprice = $this->getConfigData('active_smartprice');
 	       	if($active_smartprice == 1){
-				if($price_denmark != false){
+				if($price_denmark != false && self::checkonzip($postcode) == 'true'){
 					$price[] = $price_denmark;
+				}else{
+					$price[] = '';
 				}
 				$price[] = $this->getConfigData('active_bring_price');
 				$price[] = $this->getConfigData('active_dhl_price');
@@ -117,6 +123,24 @@ class Send24_Shipping_Model_Carrier extends Mage_Shipping_Model_Carrier_Abstract
 	    }
         return $result;
     }
+
+    // Check on postcode.
+	public function checkonzip($postcode){
+    	$send24_consumer_key = $this->getConfigData('send24_consumer_key');
+    	$send24_consumer_secret = $this->getConfigData('send24_consumer_secret');
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, "https://send24.com/wc-api/v3/get_service_area/".$postcode);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($ch, CURLOPT_HEADER, FALSE);
+		curl_setopt($ch, CURLOPT_USERPWD, $send24_consumer_key . ":" . $send24_consumer_secret);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+			"Content-Type: application/json"
+		));
+		$response = curl_exec($ch);
+		curl_close($ch);
+		return $response;
+	}
+
 
     public function adminSystemConfigChangedSectionCarriers()
     {
