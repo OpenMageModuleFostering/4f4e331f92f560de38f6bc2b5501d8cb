@@ -1,0 +1,13 @@
+<config>
+<!-- ... -->
+  <modules>
+<!-- ... -->
+<!-- declare Send24_Shipping module -->
+    <Send24_Shipping>
+      <active>true</active>
+      <codePool>local</codePool>
+    </Send24_Shipping>
+<!-- ... -->
+  </modules>
+<!-- ... -->
+</config> 

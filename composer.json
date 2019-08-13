@@ -1,0 +1,16 @@
+{
+    "name": "OpenMageModuleFostering/4f4e331f92f560de38f6bc2b5501d8cb",
+    "type": "magento-module",
+    "license": "GNU-General-Public-License-(GPL)",
+    "homepage": "",
+    "description": "Offer your customers premium delivery service with Send24 Sameday Express solution. Easy integration into your webshop. Fast and secure delivery service from door to door.",
+    "authors": [
+    {
+        "name": "Roman Barbotkin",
+        "email": "barbotkin@bk.ru"
+    }
+],
+    "suggest": {
+        "magento-hackathon/magento-composer-installer": "*"
+    }
+}

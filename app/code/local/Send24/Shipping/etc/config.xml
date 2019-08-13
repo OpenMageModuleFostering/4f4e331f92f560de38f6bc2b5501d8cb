@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <modules>
+        <Send24_Shipping>
+            <module>0.0.1</module>
+        </Send24_Shipping>
+    </modules>
+    <global>
+        <models>
+            <send24_shipping>
+                <class>Send24_Shipping_Model</class>
+            </send24_shipping>
+        </models>
+        <events>
+            <sales_order_place_after>
+                <observers>
+                    <send24_shipping_order_observer>
+                        <type>singleton</type>
+                        <class>send24_shipping/carrier</class>
+                        <method>after_order_placed</method>
+                    </send24_shipping_order_observer>
+                </observers>
+            </sales_order_place_after>
+           
+        </events>
+    </global>
+
+    <!-- Default configuration -->
+    <default>
+        <carriers>
+            <send24_shipping>
+                <active>1</active>
+                <!--
+                     This configuration should not be made visible
+                     to the administrator, because it specifies
+                     the model to be used for this carrier.
+                -->
+                <model>send24_shipping/carrier</model>
+                <!--
+                    The title as referenced in the carrier class
+                -->
+                <title>Send24 Shipping</title>
+                <!--
+                    The sort order specifies the position that
+                    this carrier appears relative to the other
+                    carriers available in checkout.
+                -->
+                <sort_order>10</sort_order>
+            
+            </send24_shipping>
+        </carriers>
+    </default>
+</config>

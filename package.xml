@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<package>
+    <name>4f4e331f92f560de38f6bc2b5501d8cb</name>
+    <version>1.0.0</version>
+    <stability>stable</stability>
+    <license>GNU General Public License (GPL)</license>
+    <channel>community</channel>
+    <extends/>
+    <summary>Offer your customers premium delivery service with Send24 Sameday Express solution. Easy integration into your webshop. Fast and secure delivery service from door to door.</summary>
+    <description>WEBSHOP BENEFITS&#xD;
+&#xD;
+With this plugin the webshop is able to meet customers need for a fast and reliable delivery service to an affordable price.&#xD;
+Simply install and enjoy the fast PickUp and Delivery service in cooperation with professionals and private people.&#xD;
+&#xD;
+CUSTOMER BENEFITS&#xD;
+&#xD;
+Customers can get their parcel today. Get notified on when the parcel arrives and track the movement on map. &#xD;
+A personal and fast delivery experience brought to your customers frontdoor.&#xD;
+&#xD;
+FUNCTIONS&#xD;
+&#xD;
+- Integrates with Send24 shipping services&#xD;
+- Printing out shipping labels&#xD;
+- Real-time ETA&#xD;
+- Intelligent Express service - only show when we have a car available&#xD;
+- Send24 Account free of charge&#xD;
+&#xD;
+REQUIRES&#xD;
+&#xD;
+This plugin requires an account on Send24. You will need to enter your api key in this shipping module to activate it. The account is free of charge and is used to administrate your shipments.&#xD;
+Register your free account on Send24.&#xD;
+</description>
+    <notes>First release</notes>
+    <authors><author><name>Roman Barbotkin</name><user>Barbotkin</user><email>barbotkin@bk.ru</email></author></authors>
+    <date>2015-12-24</date>
+    <time>12:29:11</time>
+    <contents><target name="magelocal"><dir name="Send24"><dir name="Shipping"><dir name="Model"><file name="Carrier.php" hash="f0bde0292575eadd592e602e25aab57a"/></dir><dir name="etc"><file name="config.xml" hash="248e9c21b6075dad2b20f2a34e354f8e"/><file name="system.xml" hash="8a7b836a1a5e720348975b941ed8898e"/></dir></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Send24_Shipping.xml" hash="c365adcf43a601147514106e32ef524e"/></dir></target></contents>
+    <compatible/>
+    <dependencies><required><php><min>5.1.0</min><max>7.0.0</max></php></required></dependencies>
+</package>
