@@ -5,6 +5,17 @@
             <module>0.0.1</module>
         </Send24_Shipping>
     </modules>
+
+     <adminhtml>
+        <layout>
+            <updates>
+                <send24_shipping>
+                    <file>send24_order_tamplate.xml</file>
+                </send24_shipping>
+            </updates>
+        </layout>
+    </adminhtml>
+
     <global>
         <models>
             <send24_shipping>
@@ -21,8 +32,16 @@
                     </send24_shipping_order_observer>
                 </observers>
             </sales_order_place_after>
-           
+          
         </events>
+        <helpers>
+            <send24_shipping>
+                <class>Send24_Shipping_Model</class>
+            </send24_shipping>
+        </helpers>
+
+
+
     </global>
 
     <!-- Default configuration -->
@@ -39,7 +58,7 @@
                 <!--
                     The title as referenced in the carrier class
                 -->
-                <title>Send24 Shipping</title>
+                <title>Send24</title>
                 <!--
                     The sort order specifies the position that
                     this carrier appears relative to the other

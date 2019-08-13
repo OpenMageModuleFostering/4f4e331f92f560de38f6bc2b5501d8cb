@@ -1,0 +1,10 @@
+<layout version="0.1.0">
+    <adminhtml_sales_order_view>
+        <reference name="order_info">
+            <action method="setTemplate">
+            	<template>send24/sales/order/view/info.phtml</template>
+            </action>
+            <block type="adminhtml/sales_order_view_history" name="send24_sales_order_view_custom" template="send24/sales/order/view/custom.phtml"></block>
+        </reference>
+    </adminhtml_sales_order_view>
+</layout>

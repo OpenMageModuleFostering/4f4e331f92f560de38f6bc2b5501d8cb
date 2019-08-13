@@ -1,0 +1,37 @@
+<?php 
+	$_order = $this->getOrder();
+	$track_parsel = $_order->getSend24TrackParsel();
+	$json_printout = $_order->getSend24Printout();
+	$printout = json_decode($json_printout, JSON_FORCE_OBJECT);
+	if(!empty($track_parsel)){
+?>
+    <!--Send24 Information-->
+    <div class="entry-edit">
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-account">Send24 Information</h4>
+        </div>
+        <div class="fieldset">
+            <div class="hor-scroll">
+                <table cellspacing="0" class="form-list">
+          
+                <tr>
+                    <td class="label"><label>Track parsel:</label></td>
+                    <td class="value"><a href="<?php echo $track_parsel; ?>" target="_blank"><strong><?php echo $track_parsel; ?></strong></a></td>
+                </tr> 
+                <tr>
+                    <td class="label"><label>Printout:</label></td>
+                    <td>
+                    	<p style="margin-left: 5px;">
+                    		<a href="<?php echo $printout['link_to_pdf']; ?>" target="_blank"><button title="Show PDF" type="button" class="scalable"><span>PDF</span></button></a>
+                    		<a href="<?php echo $printout['link_to_doc']; ?>" target="_blank"><button title="Show DOC" type="button" class="scalable"><span>DOC</span></button></a>
+                    		<a href="<?php echo $printout['link_to_zpl']; ?>" target="_blank"><button title="Show ZPL" type="button" class="scalable"><span>ZPL</span></button></a>
+                   			<a href="<?php echo $printout['link_to_epl']; ?>" target="_blank"><button title="Show EPL" type="button" class="scalable"><span>EPL</span></button></a>
+                   		</p>
+                   	</td>
+                </tr>
+                
+                </table>
+            </div>
+        </div>
+    </div>
+<?php } ?>

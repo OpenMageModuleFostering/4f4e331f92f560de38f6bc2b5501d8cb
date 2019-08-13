@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
     <name>4f4e331f92f560de38f6bc2b5501d8cb</name>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <stability>stable</stability>
     <license>GNU General Public License (GPL)</license>
     <channel>community</channel>
@@ -30,11 +30,11 @@ REQUIRES&#xD;
 This plugin requires an account on Send24. You will need to enter your api key in this shipping module to activate it. The account is free of charge and is used to administrate your shipments.&#xD;
 Register your free account on Send24.&#xD;
 </description>
-    <notes>First release</notes>
+    <notes>Stable release</notes>
     <authors><author><name>Roman Barbotkin</name><user>Barbotkin</user><email>barbotkin@bk.ru</email></author></authors>
-    <date>2015-12-24</date>
-    <time>12:29:11</time>
-    <contents><target name="magelocal"><dir name="Send24"><dir name="Shipping"><dir name="Model"><file name="Carrier.php" hash="f0bde0292575eadd592e602e25aab57a"/></dir><dir name="etc"><file name="config.xml" hash="248e9c21b6075dad2b20f2a34e354f8e"/><file name="system.xml" hash="8a7b836a1a5e720348975b941ed8898e"/></dir></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Send24_Shipping.xml" hash="c365adcf43a601147514106e32ef524e"/></dir></target></contents>
+    <date>2016-01-11</date>
+    <time>08:51:42</time>
+    <contents><target name="magelocal"><dir name="Send24"><dir name="Shipping"><dir name="Model"><file name="Carrier.php" hash="90371d7b7530bf6922655241d0a18832"/></dir><dir name="etc"><file name="config.xml" hash="72b2c67b829bb7d1dfcb555054f57b9b"/><file name="system.xml" hash="883824d65d05dd0c6c463483f3a3ea95"/></dir></dir></dir></target><target name="magedesign"><dir name="adminhtml"><dir name="default"><dir name="default"><dir name="layout"><file name="send24_order_tamplate.xml" hash="28484d6562bca02f3202dbd3ea7664e6"/></dir><dir name="template"><dir name="send24"><dir name="sales"><dir name="order"><dir name="view"><file name="custom.phtml" hash="5348e18bd217afe85a6d7000da4f627e"/><file name="info.phtml" hash="7704a122a7741323d32ce1bb3ebe56a1"/></dir></dir></dir></dir></dir></dir></dir></dir></target><target name="mageetc"><dir name="modules"><file name="Send24_Shipping.xml" hash="c365adcf43a601147514106e32ef524e"/></dir></target></contents>
     <compatible/>
     <dependencies><required><php><min>5.1.0</min><max>7.0.0</max></php></required></dependencies>
 </package>
