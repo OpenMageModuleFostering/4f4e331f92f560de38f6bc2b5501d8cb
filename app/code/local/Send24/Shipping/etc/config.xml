@@ -2,9 +2,28 @@
 <config>
     <modules>
         <Send24_Shipping>
-            <module>0.0.1</module>
+            <module>1.0.0</module>
         </Send24_Shipping>
     </modules>
+
+    <frontend>
+        <routers>
+            <send24_shipping>
+                <use>standard</use>
+                <args>
+                    <module>Send24_Shipping</module>
+                    <frontName>send24_shipping</frontName>
+                </args>
+            </send24_shipping>
+        </routers>
+        <layout>
+            <updates>
+                <send24_shipping>
+                    <file>send24_pickup.xml</file>
+                </send24_shipping>
+            </updates>
+        </layout>
+    </frontend>
 
      <adminhtml>
         <layout>
@@ -17,6 +36,11 @@
     </adminhtml>
 
     <global>
+        <blocks>
+            <send24_shipping>
+                <class>Send24_Shipping_Block</class>
+            </send24_shipping>
+        </blocks>
         <models>
             <send24_shipping>
                 <class>Send24_Shipping_Model</class>
@@ -32,6 +56,16 @@
                     </send24_shipping_order_observer>
                 </observers>
             </sales_order_place_after>
+
+            <admin_system_config_changed_section_carriers>
+                <observers>
+                    <send24_shipping>
+                        <type>singleton</type>
+                        <class>send24_shipping/carrier</class>
+                        <method>adminSystemConfigChangedSectionCarriers</method>
+                    </send24_shipping>
+                </observers>
+            </admin_system_config_changed_section_carriers>
           
         </events>
         <helpers>
@@ -39,10 +73,17 @@
                 <class>Send24_Shipping_Model</class>
             </send24_shipping>
         </helpers>
-
-
-
+        <template>
+            <email>
+                <send24_track_notice module="Send24">
+                    <label>Send24 Track Notice</label>
+                    <file>send24_track_notice.html</file>
+                    <type>html</type>
+                </send24_track_notice>
+            </email>
+        </template>
     </global>
+
 
     <!-- Default configuration -->
     <default>
@@ -59,11 +100,10 @@
                     The title as referenced in the carrier class
                 -->
                 <title>Send24</title>
-                <!--
-                    The sort order specifies the position that
-                    this carrier appears relative to the other
-                    carriers available in checkout.
-                -->
+                <startexpress_time_select>08,00,00</startexpress_time_select>
+                <endexpress_time_select>18,00,00</endexpress_time_select>
+                <select_insurance>1</select_insurance>
+
                 <sort_order>10</sort_order>
             
             </send24_shipping>

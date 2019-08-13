@@ -1,0 +1,245 @@
+<?php
+/**
+ *
+ * Send24 Module
+ *
+ *
+ */
+$googleApiKey = Mage::getStoreConfig('carriers/send24_shipping/googlemap_key');
+
+?>
+<script type="text/javascript">
+  shops_details = [];
+</script>
+<?php 
+
+// Shipping data.
+$data = array();
+$data['address'] = Mage::getSingleton('checkout/type_onepage')->getQuote()->getShippingAddress()->getData('street');
+$data['zip'] = Mage::getSingleton('checkout/type_onepage')->getQuote()->getShippingAddress()->getPostcode();
+$data['city'] = Mage::getSingleton('checkout/type_onepage')->getQuote()->getShippingAddress()->getCity();
+$data['country'] = Mage::getSingleton('checkout/type_onepage')->getQuote()->getShippingAddress()->getCountry();
+if($data['country']  == 'DK'){
+    $data['country']  = 'Denmark';
+}
+
+// Keys Api.
+$send24_consumer_key = Mage::getStoreConfig('carriers/send24_shipping/send24_consumer_key');
+$send24_consumer_secret = Mage::getStoreConfig('carriers/send24_shipping/send24_consumer_secret');
+
+$val = json_encode($data);
+// Get pickups list.
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "https://www.send24.com/wc-api/v3/pickups_list");
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+curl_setopt($ch, CURLOPT_HEADER, FALSE);
+curl_setopt($ch, CURLOPT_POST, TRUE);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $val);
+curl_setopt($ch, CURLOPT_USERPWD, $send24_consumer_key . ":" . $send24_consumer_secret);
+curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+  "Content-Type: application/json",
+));
+$response = json_decode(curl_exec($ch));
+curl_close($ch);
+
+// print_r($response);
+// Create format cordinates for google map.
+if(!empty($response)){
+    $res = array();
+    foreach ($response as $key => $value){
+      $a = (array)$value;
+      $res[$key] = $a;
+    }
+
+    uasort($res, array('Send24', 'sort_distance'));
+    $output = array_slice($res, 0, 7);
+
+    curl_close($ch);
+    $array_shops_id = array();
+    $map_value = '[';
+    foreach ($output as $key => $value) {
+      $map_value .= '{lat: "'.$value['latitude'].'", lng: "'.$value['longitude'].'", title: "'.$value['post_title'].'", id: "'.$value['ID'].'", distance: "'.$value['distance'].'"},';
+      array_push($array_shops_id, $value['ID']);
+
+      }
+    $map_value .= ']';
+}
+
+  // Get shop all details.
+  $value_shops_id = implode(",", $array_shops_id);
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, "https://www.send24.com/wc-api/v3/get_shop_full_list");
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+  curl_setopt($ch, CURLOPT_HEADER, FALSE);
+  curl_setopt($ch, CURLOPT_POST, TRUE);
+  curl_setopt($ch, CURLOPT_USERPWD, $send24_consumer_key . ":" . $send24_consumer_secret);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, '
+                                  {
+                                      "shops_list": "'.$value_shops_id.'"
+                                  }
+                                  ');
+  curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+      "Content-Type: application/json"
+  ));
+
+  $shops_list = curl_exec($ch);
+?>
+<script type="text/javascript">
+  shops_list = <?php echo $shops_list; ?>;
+  default_shop_id = <?php echo $array_shops_id['0'];?>
+</script>
+
+<?php
+$html = array();
+// Map.
+$html = '<br><div id="send24_map_info">';
+$html .= 'Selected shop: <b id="shop_selected">'.$output['0']['post_title'].'</b> <p>(<a id="send24_map" href="#open_map">choose</a>)</p>';
+$html .= '</div>';
+$html .= '<a href="#" class="overlay" id="open_map"></a>';
+$html .= '<div class="send24_popup" id="send24-popup-map">';
+$html .= '<div id="map"></div>';
+$html .= '<div id="send24_info_map"></div>';
+$html .= '<div id="send24_selected_shop"></div>';
+$html .= '</div>';
+echo $html;
+
+?>
+<script type="text/javascript">
+  jQuery( "#s_method_send24_shipping_send24" ).live( "click", function() {
+    jQuery('#send24_map_info').show("slow");
+  });
+  window.stroreshipper = {};
+    window.loadJsFile = function(filename){
+        var fileref=document.createElement('script');
+        fileref.setAttribute("type","text/javascript");
+        fileref.setAttribute("src", filename);
+        if (typeof fileref!="undefined"){
+            document.getElementsByTagName("head")[0].appendChild(fileref);
+        }
+    }
+    
+    var map;
+    window.initMap = function() {
+      var coordinates = <?php echo $map_value; ?>;
+      var start_coordinates = Math.round(coordinates.length/2);
+      var marker = Array();
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: {lat: Number(coordinates[start_coordinates].lat), lng: Number(coordinates[start_coordinates].lng)},
+          zoom: 12
+      });
+
+      var default_id_distance = 0;
+      for (var i = 0; i < coordinates.length; i++){                          
+        var infowindow = new google.maps.InfoWindow;
+        infowindow.setContent('<b>'+coordinates[i].title+'</b>');
+        marker[i] = new google.maps.Marker({
+            map: map, 
+            position: {lat: Number(coordinates[i].lat), lng: Number(coordinates[i].lng)},
+            id_marker: coordinates[i].id,
+            distance: coordinates[i].distance,
+        });
+
+        // Default value distance for first pickup.
+        if(default_shop_id == coordinates[i].id){
+          default_id_distance = coordinates[i].distance;
+        }
+
+        // Marker click.
+        marker[i].addListener('click', function() {
+            var id = this.id_marker;
+            var distance = parseInt(this.distance*100)/100;
+            var shop = shops_list[id];
+            var monday = '<tr><td>Monday</td><td>'+shop.opening_week.Monday.start+'-'+shop.opening_week.Monday.end+'</td></tr>';
+            var tuesday = '<tr><td>Tuesday</td><td>'+shop.opening_week.Tuesday.start+'-'+shop.opening_week.Tuesday.end+'</td></tr>';
+            var wednesday = '<tr><td>Wednesday</td><td>'+shop.opening_week.Wednesday.start+'-'+shop.opening_week.Wednesday.end+'</td></tr>';
+            var thursday = '<tr><td>Thursday</td><td>'+shop.opening_week.Thursday.start+'-'+shop.opening_week.Thursday.end+'</td></tr>';
+            var friday = '<tr><td>Friday</td><td>'+shop.opening_week.Friday.start+'-'+shop.opening_week.Friday.end+'</td></tr>';
+            if(shop.opening_week.Saturday != null){
+              var saturday = '<tr><td>Saturday</td><td>'+shop.opening_week.Saturday.start+'-'+shop.opening_week.Saturday.end+'</td></tr>';
+            }else{
+              var saturday = '<tr><td>Saturday</td><td>-</td></tr>';
+            }
+            if(shop.opening_week.Sunday != null){
+              var sunday = '<tr><td>Sunday</td><td>'+shop.opening_week.Sunday.start+'-'+shop.opening_week.Sunday.end+'</td></tr>';
+            }else{
+              var sunday = '<tr><td>Sunday</td><td>-</td></tr>';
+            }
+            var distance_result = '<p id="send24_distance">Distance: '+distance+' meter</p>';
+            jQuery('#send24_info_map').html('<h3 id="popup_h3">Addresse</h3><p>Shop: '+shop.shop_title+'</p>'+distance_result+'<p id="step_1info_map">'+shop.shop_location+'</p>');
+            jQuery('#step_1info_map').after('<h3 id="popup_h3">Abningstider</h3><table id="popup_table">'+monday+''+tuesday+''+wednesday+''+thursday+''+friday+''+saturday+''+sunday+'</table>');
+            var rating = shops_list[id];
+            if(rating.user_login != null){
+              if(rating.rating['0'] != 'none'){
+                    var avatar = rating.user_avatar;
+                    var rating_html = '<div id="rating_send24"><div id="rating_avatar_send24">'+avatar+'<br><div id="rating_name_user">'+rating.user_login+'</div></div><div id="rating_service_name">'+rating.category+'<br><span class="send24_rating_stars"><span class="stars-rating">';  
+                    // var rating_html = '';
+                    for (var i = 0; i < Math.ceil(rating.rating); i++) {
+                      rating_html += '<span class="dashicons-star-filled">☆</span>';
+                    };
+                    if(i <= 5){
+                      var c = 5-i;
+                      for (var i = 0; i < c; i++) {
+                        rating_html += '<span class="dashicons-star-empty">☆</span>';
+                      };
+                    }
+                    rating_html += '</span><span class="send24_rating_average">'+rating.rating+'</span></span></div></div>  ';
+                    jQuery('#step_1info_map').after(rating_html);
+                    jQuery('#step_1info_map').after('<h3 class="bestyrer_h3">Bestyrer</h3>');
+              }
+            }
+            jQuery('#send24_selected_shop').html('Selected shop: <b style="color: #4E8FFD;">'+shop.shop_title+'</b>');
+            jQuery('#shop_selected').html(shop.shop_title);
+            document.cookie = 'selected_shop_id='+id;
+       
+        });
+      };
+        // Add default shop. 
+        var shop = shops_list[default_shop_id];
+        var distance = parseInt(default_id_distance*100)/100;
+        var monday = '<tr><td>Monday</td><td>'+shop.opening_week.Monday.start+'-'+shop.opening_week.Monday.end+'</td></tr>';
+        var tuesday = '<tr><td>Tuesday</td><td>'+shop.opening_week.Tuesday.start+'-'+shop.opening_week.Tuesday.end+'</td></tr>';
+        var wednesday = '<tr><td>Wednesday</td><td>'+shop.opening_week.Wednesday.start+'-'+shop.opening_week.Wednesday.end+'</td></tr>';
+        var thursday = '<tr><td>Thursday</td><td>'+shop.opening_week.Thursday.start+'-'+shop.opening_week.Thursday.end+'</td></tr>';
+        var friday = '<tr><td>Friday</td><td>'+shop.opening_week.Friday.start+'-'+shop.opening_week.Friday.end+'</td></tr>';
+        if(shop.opening_week.Saturday != null){
+          var saturday = '<tr><td>Saturday</td><td>'+shop.opening_week.Saturday.start+'-'+shop.opening_week.Saturday.end+'</td></tr>';
+        }else{
+          var saturday = '<tr><td>Saturday</td><td>-</td></tr>';
+        }
+        if(shop.opening_week.Sunday != null){
+          var sunday = '<tr><td>Sunday</td><td>'+shop.opening_week.Sunday.start+'-'+shop.opening_week.Sunday.end+'</td></tr>';
+        }else{
+          var sunday = '<tr><td>Sunday</td><td>-</td></tr>';
+        }
+        var distance_result = '<p id="send24_distance">Distance: '+distance+' meter</p>';
+        jQuery('#send24_info_map').html('<h3 id="popup_h3">Addresse</h3><p>Shop: '+shop.shop_title+' </p>'+distance_result+'<p id="step_1info_map">'+shop.shop_location+'</p>');
+        jQuery('#step_1info_map').after('<h3 id="popup_h3">Abningstider</h3><table id="popup_table">'+monday+''+tuesday+''+wednesday+''+thursday+''+friday+''+saturday+''+sunday+'</table>');
+        if(shop.user_login != null){
+            if(shop.rating['0'] != 'none'){
+                  var avatar = shop.user_avatar;
+                  var rating_html = '<div id="rating_send24"><div id="rating_avatar_send24">'+avatar+'<br><div id="rating_name_user">'+shop.user_login+'</div></div><div id="rating_service_name">'+shop.category+'<br><span class="send24_rating_stars"><span class="stars-rating">';  
+                  // var rating_html = '';
+                  for (var i = 0; i < Math.ceil(shop.rating); i++) {
+                    rating_html += '<span class="dashicons-star-filled">☆</span>';
+                  };
+                  if(i <= 5){
+                    var c = 5-i;
+                    for (var i = 0; i < c; i++) {
+                      rating_html += '<span class="dashicons-star-empty">☆</span>';
+                    };
+                  }
+                  rating_html += '</span><span class="send24_rating_average">'+shop.rating+'</span></span></div></div>  ';
+                  jQuery('#step_1info_map').after(rating_html);
+                  jQuery('#step_1info_map').after('<h3 class="bestyrer_h3">Bestyrer</h3>');
+            }
+        }
+        jQuery('#send24_selected_shop').html('Selected shop: <b style="color: #4E8FFD;">'+shop.shop_title+'</b>');
+        jQuery('#shop_selected').html(shop.shop_title);
+        document.cookie = 'selected_shop_id='+default_shop_id;
+    }
+
+    <?php if($googleApiKey):?>
+    window.loadJsFile("https://maps.googleapis.com/maps/api/js?key=<?php echo $googleApiKey; ?>&signed_in=true&libraries=places&callback=initMap");
+    <?php endif; ?>
+</script>
